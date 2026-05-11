@@ -42,13 +42,23 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [lint, test]      
+    needs: [lint, test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Simulate deploy
-        run: echo "Deploying to production server..."
+      - name: Show who is deploying
+        env:
+          USERNAME: ${{ secrets.MY_USERNAME }}
+        run: echo "Deploying as user $USERNAME"
 
-      - name: Deploy done
-        run: echo "Deploy complete! Version $(git rev-parse --short HEAD) is live."
+      - name: Check secret is not empty
+        env:
+          PASSWORD: ${{ secrets.MY_PASSWORD }}
+        run: |
+          if [ -z "$PASSWORD" ]; then
+            echo "ERROR: password is empty!"
+            exit 1
+          else
+            echo "Password is set correctly (hidden)"
+          fi
