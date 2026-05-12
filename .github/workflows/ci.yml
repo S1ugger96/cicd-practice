@@ -47,18 +47,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show who is deploying
-        env:
-          USERNAME: ${{ secrets.MY_USERNAME }}
-        run: echo "Deploying as user $USERNAME"
-
-      - name: Check secret is not empty
-        env:
-          PASSWORD: ${{ secrets.MY_PASSWORD }}
+      - name: Setup SSH key
         run: |
-          if [ -z "$PASSWORD" ]; then
-            echo "ERROR: password is empty!"
-            exit 1
-          else
-            echo "Password is set correctly (hidden)"
-          fi
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            echo 'Connected successfully!'
+            echo 'Server hostname:' && hostname
+            echo 'Current directory:' && pwd
+            echo 'Deploy complete!'
+          "
