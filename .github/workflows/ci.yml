@@ -108,3 +108,15 @@ jobs:
         run: |
           echo "Deploying to PRODUCTION..."
           cat dist/version.txt
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: failure()
+    steps:
+      - name: Notify about failure
+        run: |
+          echo "Pipeline failed!"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"          
