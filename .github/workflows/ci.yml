@@ -40,25 +40,24 @@ jobs:
       - name: Run tests
         run: pytest test_app.py -v
 
-  deploy:
+  deploy-staging:
     runs-on: ubuntu-latest
     needs: [lint, test]
+    environment: staging
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Deploy to staging
+        run: echo "Deploying to STAGING environment..."
 
-      - name: Deploy to server
-        run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            echo 'Connected successfully!'
-            echo 'Server hostname:' && hostname
-            echo 'Current directory:' && pwd
-            echo 'Deploy complete!'
-          "
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: echo "Deploying to PRODUCTION environment..."
