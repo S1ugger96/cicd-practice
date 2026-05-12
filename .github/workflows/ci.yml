@@ -55,24 +55,56 @@ jobs:
       - name: Run tests
         run: pytest test_app.py -v
 
-  deploy-staging:
+  build:
     runs-on: ubuntu-latest
     needs: [lint, test]
-    environment: staging
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Build app
+        run: |
+          mkdir -p dist
+          cp app.py dist/
+          echo "version=$(git rev-parse --short HEAD)" > dist/version.txt
+          cat dist/version.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: dist/
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: staging
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+          path: dist/
+
       - name: Deploy to staging
-        run: echo "Deploying to STAGING environment..."
+        run: |
+          echo "Deploying to STAGING..."
+          echo "Files to deploy:"
+          ls -la dist/
+          cat dist/version.txt
 
   deploy-prod:
     runs-on: ubuntu-latest
     needs: [deploy-staging]
     environment: production
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+          path: dist/
 
       - name: Deploy to production
-        run: echo "Deploying to PRODUCTION environment..."
+        run: |
+          echo "Deploying to PRODUCTION..."
+          cat dist/version.txt
